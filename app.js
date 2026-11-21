@@ -56,9 +56,9 @@ function setMode(mode) {
 function renderTimer() {
   const duration = DURATIONS[timer.mode];
   elements.timer.textContent = formatTime(timer.remaining);
-  document.title = `${formatTime(timer.remaining)} — Mộc`;
-  elements.label.textContent = timer.running ? "đang giữ nhịp" : "sẵn sàng bắt đầu";
-  elements.start.textContent = timer.running ? "Tạm dừng" : "Bắt đầu";
+  document.title = `${formatTime(timer.remaining)} — Focus`;
+  elements.label.textContent = timer.running ? "staying on track" : "ready to begin";
+  elements.start.textContent = timer.running ? "Pause" : "Start";
   elements.ring.style.strokeDashoffset = String(653.45 * (1 - timer.remaining / duration));
   elements.tabs.forEach((tab) => {
     const active = tab.dataset.mode === timer.mode;
@@ -116,7 +116,7 @@ function completeSession() {
 function renderStats() {
   elements.sessions.textContent = String(stats.sessions);
   elements.minutes.textContent = String(stats.minutes);
-  elements.day.textContent = new Intl.DateTimeFormat("vi-VN", { weekday: "short", day: "2-digit", month: "2-digit" }).format(new Date());
+  elements.day.textContent = new Intl.DateTimeFormat("en-US", { weekday: "short", day: "2-digit", month: "2-digit" }).format(new Date());
 }
 
 function saveTasks() {
@@ -135,7 +135,7 @@ function renderTasks() {
     checkbox.className = "task-check";
     checkbox.type = "checkbox";
     checkbox.checked = task.done;
-    checkbox.setAttribute("aria-label", `Đánh dấu ${task.text} hoàn thành`);
+    checkbox.setAttribute("aria-label", `Mark ${task.text} complete`);
 
     const text = document.createElement("span");
     text.className = "task-text";
@@ -145,14 +145,14 @@ function renderTasks() {
     remove.className = "delete-task";
     remove.type = "button";
     remove.dataset.action = "delete";
-    remove.setAttribute("aria-label", `Xóa ${task.text}`);
+    remove.setAttribute("aria-label", `Delete ${task.text}`);
     remove.textContent = "×";
 
     item.append(checkbox, text, remove);
     elements.taskList.append(item);
   }
   const active = tasks.find((task) => task.id === activeTaskId);
-  elements.currentTask.textContent = active ? `Đang tập trung: ${active.text}` : "Chọn một việc để bắt đầu.";
+  elements.currentTask.textContent = active ? `Focusing on: ${active.text}` : "Choose a task to begin.";
 }
 
 function handleTaskClick(event) {

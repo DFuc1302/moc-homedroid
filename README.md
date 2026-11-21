@@ -1,41 +1,41 @@
-# Mộc
+# Focus
 
-Một đồng hồ Pomodoro và danh sách việc cần làm bằng tiếng Việt. Chạy hoàn toàn trong trình duyệt, không tài khoản, không dịch vụ ngoài, không dependency.
+An English-language Pomodoro timer and task list. It runs entirely in the browser, with no account, external services, or dependencies.
 
-## Tính năng
+## Features
 
-- Đồng hồ tập trung 25 phút, nghỉ ngắn 5 phút, nghỉ dài 15 phút.
-- Tự chuyển sang nghỉ dài sau mỗi 4 phiên tập trung.
-- Việc cần làm, phiên hoàn thành, giao diện sáng/tối được lưu trong `localStorage`.
-- Responsive; dùng được trên điện thoại và máy tính.
+- 25-minute focus timer, 5-minute short break, and 15-minute long break.
+- Automatically switches to a long break after every 4 focus sessions.
+- Tasks, completed sessions, and the light/dark theme are saved in `localStorage`.
+- Responsive on phones and computers.
 
-## Chạy thử
+## Run locally
 
-Vì app dùng ES module, hãy phục vụ thư mục qua HTTP:
+Because the app uses ES modules, serve the directory over HTTP:
 
 ```bash
 python -m http.server 4173
 ```
 
-Mở `http://localhost:4173`. Kiểm tra logic timer:
+Open `http://localhost:4173`. Check the timer logic:
 
 ```bash
 node timer.test.mjs
 ```
 
-## Deploy bằng HomeDroid
+## Deploy with HomeDroid
 
-HomeDroid deploy từ Git repository. Đẩy thư mục này lên một repository GitHub, sau đó mở **Dashboard → Deployments → New deployment** và nhập:
+HomeDroid deploys from a Git repository. Push this directory to a GitHub repository, then open **Dashboard → Deployments → New deployment** and enter:
 
-| Trường | Giá trị |
+| Field | Value |
 | --- | --- |
-| Repository | URL HTTPS của repository |
+| Repository | Repository HTTPS URL |
 | Branch | `main` |
-| Port | `4173` (hoặc một cổng trống từ 1024–65535) |
-| Runtime | `Static` hoặc `Auto` |
-| Build command | để trống |
-| Start command | để trống |
+| Port | `4173` (or an available port from 1024–65535) |
+| Runtime | `Static` or `Auto` |
+| Build command | leave blank |
+| Start command | leave blank |
 
-HomeDroid sẽ nhận diện project là static site và phục vụ trực tiếp bằng Caddy. Truy cập tại `http://<IP-điện-thoại>:4173`.
+HomeDroid detects the project as a static site and serves it directly with Caddy. Open it at `http://<phone-IP>:4173`.
 
-> Dữ liệu nằm trong `localStorage` của từng trình duyệt, vì vậy không đồng bộ giữa các thiết bị.
+> Data stays in each browser's `localStorage`, so it does not sync across devices.

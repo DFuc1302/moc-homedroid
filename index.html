@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="vi" data-theme="dark">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101712">
-  <meta name="description" content="Mộc — đồng hồ tập trung và danh sách việc cần làm, chạy hoàn toàn trên HomeDroid.">
-  <title>Mộc — Tập trung nhẹ nhàng</title>
+  <meta name="description" content="Focus — a focus timer and task list running entirely on HomeDroid.">
+  <title>Focus — Find your rhythm</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,31 +13,31 @@
   <div class="ambient ambient-two"></div>
 
   <header class="site-header">
-    <a class="brand" href="#" aria-label="Mộc, về đầu trang">
-      <span class="brand-mark" aria-hidden="true">M</span>
-      <span>Mộc</span>
+    <a class="brand" href="#" aria-label="Focus, back to top">
+      <span class="brand-mark" aria-hidden="true">F</span>
+      <span>Focus</span>
     </a>
-    <button class="icon-button" id="theme-toggle" type="button" aria-label="Đổi giao diện sáng tối" title="Đổi giao diện">
+    <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch between light and dark themes" title="Switch theme">
       <span aria-hidden="true">☼</span>
     </button>
   </header>
 
   <main>
     <section class="hero" aria-labelledby="greeting">
-      <p class="eyebrow">Không gian tập trung</p>
-      <h1 id="greeting">Chậm lại. Làm một việc.</h1>
-      <p class="hero-copy">Một nhịp 25 phút, một mục tiêu rõ ràng, không cần tài khoản.</p>
+      <p class="eyebrow">Your focus space</p>
+      <h1 id="greeting">Slow down. Do one thing.</h1>
+      <p class="hero-copy">One 25-minute session, one clear goal, no account needed.</p>
     </section>
 
     <div class="workspace">
       <section class="timer-card card" aria-labelledby="timer-heading">
-        <div class="mode-tabs" role="tablist" aria-label="Chế độ hẹn giờ">
-          <button class="mode-tab active" type="button" role="tab" aria-selected="true" data-mode="focus">Tập trung</button>
-          <button class="mode-tab" type="button" role="tab" aria-selected="false" data-mode="short">Nghỉ ngắn</button>
-          <button class="mode-tab" type="button" role="tab" aria-selected="false" data-mode="long">Nghỉ dài</button>
+        <div class="mode-tabs" role="tablist" aria-label="Timer mode">
+          <button class="mode-tab active" type="button" role="tab" aria-selected="true" data-mode="focus">Focus</button>
+          <button class="mode-tab" type="button" role="tab" aria-selected="false" data-mode="short">Short break</button>
+          <button class="mode-tab" type="button" role="tab" aria-selected="false" data-mode="long">Long break</button>
         </div>
 
-        <h2 class="sr-only" id="timer-heading">Đồng hồ tập trung</h2>
+        <h2 class="sr-only" id="timer-heading">Focus timer</h2>
         <div class="timer-shell">
           <svg class="progress-ring" viewBox="0 0 240 240" aria-hidden="true">
             <circle class="ring-track" cx="120" cy="120" r="104"></circle>
@@ -45,35 +45,35 @@
           </svg>
           <div class="timer-face" aria-live="polite" aria-atomic="true">
             <span class="timer-value" id="timer-value">25:00</span>
-            <span class="timer-label" id="timer-label">sẵn sàng bắt đầu</span>
+            <span class="timer-label" id="timer-label">ready to begin</span>
           </div>
         </div>
 
         <div class="timer-actions">
-          <button class="secondary-button" id="reset-button" type="button">Đặt lại</button>
-          <button class="primary-button" id="start-button" type="button">Bắt đầu</button>
+          <button class="secondary-button" id="reset-button" type="button">Reset</button>
+          <button class="primary-button" id="start-button" type="button">Start</button>
         </div>
 
-        <p class="current-task" id="current-task">Chọn một việc để bắt đầu.</p>
+        <p class="current-task" id="current-task">Choose a task to begin.</p>
       </section>
 
       <aside class="side-column">
         <section class="stats card" aria-labelledby="stats-title">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Hôm nay</p>
-              <h2 id="stats-title">Nhịp của bạn</h2>
+              <p class="eyebrow">Today</p>
+              <h2 id="stats-title">Your rhythm</h2>
             </div>
             <span class="day-pill" id="day-label"></span>
           </div>
           <div class="stat-grid">
             <div class="stat-item">
               <strong id="session-count">0</strong>
-              <span>phiên xong</span>
+              <span>sessions done</span>
             </div>
             <div class="stat-item">
               <strong id="minute-count">0</strong>
-              <span>phút sâu</span>
+              <span>focus minutes</span>
             </div>
           </div>
         </section>
@@ -81,29 +81,29 @@
         <section class="tasks card" aria-labelledby="tasks-title">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Một việc một lúc</p>
-              <h2 id="tasks-title">Việc cần làm</h2>
+              <p class="eyebrow">One task at a time</p>
+              <h2 id="tasks-title">Tasks</h2>
             </div>
-            <button class="text-button" id="clear-done" type="button">Dọn việc xong</button>
+            <button class="text-button" id="clear-done" type="button">Clear completed</button>
           </div>
 
           <form class="task-form" id="task-form">
-            <label class="sr-only" for="task-input">Thêm việc cần làm</label>
-            <input id="task-input" name="task" maxlength="100" autocomplete="off" placeholder="Bạn muốn hoàn thành việc gì?" required>
-            <button type="submit" aria-label="Thêm việc">+</button>
+            <label class="sr-only" for="task-input">Add a task</label>
+            <input id="task-input" name="task" maxlength="100" autocomplete="off" placeholder="What would you like to complete?" required>
+            <button type="submit" aria-label="Add task">+</button>
           </form>
 
           <ul class="task-list" id="task-list" aria-live="polite"></ul>
-          <p class="empty-state" id="empty-state">Danh sách đang thoáng. Thêm một việc nhỏ nhé.</p>
+          <p class="empty-state" id="empty-state">Your list is clear. Add one small task.</p>
         </section>
       </aside>
     </div>
   </main>
 
   <footer>
-    <p>Dữ liệu chỉ lưu trong trình duyệt này.</p>
+    <p>Data is stored only in this browser.</p>
     <span aria-hidden="true">•</span>
-    <p>Chạy tại nhà cùng HomeDroid.</p>
+    <p>Hosted at home with HomeDroid.</p>
   </footer>
 
   <script type="module" src="app.js"></script>
