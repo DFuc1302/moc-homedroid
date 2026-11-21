@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101712">
+  <meta name="description" content="Mộc — đồng hồ tập trung và danh sách việc cần làm, chạy hoàn toàn trên HomeDroid.">
+  <title>Mộc — Tập trung nhẹ nhàng</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="Mộc, về đầu trang">
+      <span class="brand-mark" aria-hidden="true">M</span>
+      <span>Mộc</span>
+    </a>
+    <button class="icon-button" id="theme-toggle" type="button" aria-label="Đổi giao diện sáng tối" title="Đổi giao diện">
+      <span aria-hidden="true">☼</span>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="greeting">
+      <p class="eyebrow">Không gian tập trung</p>
+      <h1 id="greeting">Chậm lại. Làm một việc.</h1>
+      <p class="hero-copy">Một nhịp 25 phút, một mục tiêu rõ ràng, không cần tài khoản.</p>
+    </section>
+
+    <div class="workspace">
+      <section class="timer-card card" aria-labelledby="timer-heading">
+        <div class="mode-tabs" role="tablist" aria-label="Chế độ hẹn giờ">
+          <button class="mode-tab active" type="button" role="tab" aria-selected="true" data-mode="focus">Tập trung</button>
+          <button class="mode-tab" type="button" role="tab" aria-selected="false" data-mode="short">Nghỉ ngắn</button>
+          <button class="mode-tab" type="button" role="tab" aria-selected="false" data-mode="long">Nghỉ dài</button>
+        </div>
+
+        <h2 class="sr-only" id="timer-heading">Đồng hồ tập trung</h2>
+        <div class="timer-shell">
+          <svg class="progress-ring" viewBox="0 0 240 240" aria-hidden="true">
+            <circle class="ring-track" cx="120" cy="120" r="104"></circle>
+            <circle class="ring-progress" id="ring-progress" cx="120" cy="120" r="104"></circle>
+          </svg>
+          <div class="timer-face" aria-live="polite" aria-atomic="true">
+            <span class="timer-value" id="timer-value">25:00</span>
+            <span class="timer-label" id="timer-label">sẵn sàng bắt đầu</span>
+          </div>
+        </div>
+
+        <div class="timer-actions">
+          <button class="secondary-button" id="reset-button" type="button">Đặt lại</button>
+          <button class="primary-button" id="start-button" type="button">Bắt đầu</button>
+        </div>
+
+        <p class="current-task" id="current-task">Chọn một việc để bắt đầu.</p>
+      </section>
+
+      <aside class="side-column">
+        <section class="stats card" aria-labelledby="stats-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Hôm nay</p>
+              <h2 id="stats-title">Nhịp của bạn</h2>
+            </div>
+            <span class="day-pill" id="day-label"></span>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <strong id="session-count">0</strong>
+              <span>phiên xong</span>
+            </div>
+            <div class="stat-item">
+              <strong id="minute-count">0</strong>
+              <span>phút sâu</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="tasks card" aria-labelledby="tasks-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Một việc một lúc</p>
+              <h2 id="tasks-title">Việc cần làm</h2>
+            </div>
+            <button class="text-button" id="clear-done" type="button">Dọn việc xong</button>
+          </div>
+
+          <form class="task-form" id="task-form">
+            <label class="sr-only" for="task-input">Thêm việc cần làm</label>
+            <input id="task-input" name="task" maxlength="100" autocomplete="off" placeholder="Bạn muốn hoàn thành việc gì?" required>
+            <button type="submit" aria-label="Thêm việc">+</button>
+          </form>
+
+          <ul class="task-list" id="task-list" aria-live="polite"></ul>
+          <p class="empty-state" id="empty-state">Danh sách đang thoáng. Thêm một việc nhỏ nhé.</p>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <p>Dữ liệu chỉ lưu trong trình duyệt này.</p>
+    <span aria-hidden="true">•</span>
+    <p>Chạy tại nhà cùng HomeDroid.</p>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

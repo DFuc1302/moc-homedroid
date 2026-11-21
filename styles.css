@@ -1,0 +1,187 @@
+:root {
+  color-scheme: dark;
+  --bg: #101712;
+  --surface: rgba(29, 40, 32, 0.84);
+  --surface-strong: #26352b;
+  --text: #f2f4ec;
+  --muted: #aeb9ae;
+  --line: rgba(255, 255, 255, 0.09);
+  --accent: #c5f36a;
+  --accent-strong: #dcff96;
+  --accent-ink: #19200f;
+  --danger: #ff9d8f;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  --radius: 28px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f1f2e9;
+  --surface: rgba(255, 255, 249, 0.84);
+  --surface-strong: #e4e9da;
+  --text: #1b241d;
+  --muted: #667067;
+  --line: rgba(27, 36, 29, 0.1);
+  --accent: #76a526;
+  --accent-strong: #638f18;
+  --accent-ink: #f8ffeb;
+  --danger: #b94738;
+  --shadow: 0 24px 70px rgba(45, 61, 48, 0.13);
+}
+
+* { box-sizing: border-box; }
+
+html { min-width: 320px; }
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  background: var(--bg);
+  color: var(--text);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+button, input { font: inherit; }
+button { color: inherit; }
+button:focus-visible, input:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 3px; }
+
+.ambient {
+  position: fixed;
+  z-index: -1;
+  width: 42rem;
+  height: 42rem;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.12;
+  pointer-events: none;
+}
+.ambient-one { top: -22rem; right: -10rem; background: var(--accent); }
+.ambient-two { bottom: -30rem; left: -12rem; background: #5cc6a9; }
+
+.site-header, main, footer { width: min(1160px, calc(100% - 40px)); margin-inline: auto; }
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 0;
+}
+
+.brand {
+  display: inline-flex;
+  gap: 11px;
+  align-items: center;
+  color: var(--text);
+  font-size: 1.08rem;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: Georgia, serif;
+  font-size: 1.25rem;
+}
+
+.icon-button {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.hero { max-width: 720px; padding: 58px 0 52px; }
+.eyebrow { margin: 0 0 9px; color: var(--accent-strong); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+.hero h1 { max-width: 650px; margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 7vw, 6.6rem); font-weight: 500; letter-spacing: -0.055em; line-height: 0.93; }
+.hero-copy { max-width: 520px; margin: 24px 0 0; color: var(--muted); font-size: 1.08rem; line-height: 1.65; }
+
+.workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(330px, 0.85fr); gap: 20px; align-items: start; }
+.card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); backdrop-filter: blur(18px); }
+.timer-card { min-height: 650px; padding: 26px; }
+
+.mode-tabs { display: flex; width: fit-content; max-width: 100%; gap: 5px; padding: 5px; border-radius: 99px; background: var(--surface-strong); }
+.mode-tab { padding: 10px 16px; border: 0; border-radius: 99px; background: transparent; color: var(--muted); font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.mode-tab.active { background: var(--accent); color: var(--accent-ink); }
+
+.timer-shell { position: relative; display: grid; width: min(390px, 86vw); margin: 40px auto 22px; place-items: center; aspect-ratio: 1; }
+.progress-ring { position: absolute; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-track, .ring-progress { fill: none; stroke-width: 5; }
+.ring-track { stroke: var(--line); }
+.ring-progress { stroke: var(--accent); stroke-linecap: round; stroke-dasharray: 653.45; stroke-dashoffset: 0; transition: stroke-dashoffset 300ms linear; }
+.timer-face { display: flex; flex-direction: column; align-items: center; }
+.timer-value { font-size: clamp(4rem, 10vw, 7rem); font-weight: 680; letter-spacing: -0.07em; line-height: 1; font-variant-numeric: tabular-nums; }
+.timer-label { margin-top: 14px; color: var(--muted); font-size: 0.82rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.timer-actions { display: flex; justify-content: center; gap: 10px; }
+.primary-button, .secondary-button { min-width: 124px; padding: 14px 20px; border-radius: 14px; font-weight: 780; cursor: pointer; }
+.primary-button { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); }
+.secondary-button { border: 1px solid var(--line); background: transparent; }
+.current-task { min-height: 24px; margin: 28px 0 0; overflow: hidden; color: var(--muted); text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+
+.side-column { display: grid; gap: 20px; }
+.stats, .tasks { padding: 24px; }
+.section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.section-heading h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 1.7rem; font-weight: 500; letter-spacing: -0.03em; }
+.day-pill { padding: 7px 10px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 0.72rem; font-weight: 700; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+.stat-item { padding: 18px; border-radius: 18px; background: var(--surface-strong); }
+.stat-item strong { display: block; font-size: 2.25rem; letter-spacing: -0.05em; }
+.stat-item span { color: var(--muted); font-size: 0.8rem; }
+
+.tasks { min-height: 360px; }
+.text-button { padding: 3px 0; border: 0; background: transparent; color: var(--muted); font-size: 0.75rem; cursor: pointer; }
+.text-button:hover { color: var(--danger); }
+.task-form { display: flex; gap: 8px; margin: 24px 0 16px; }
+.task-form input { min-width: 0; flex: 1; padding: 13px 15px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-strong); color: var(--text); }
+.task-form input::placeholder { color: var(--muted); }
+.task-form button { width: 48px; border: 0; border-radius: 14px; background: var(--accent); color: var(--accent-ink); font-size: 1.45rem; cursor: pointer; }
+.task-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.task-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 11px 12px; border: 1px solid transparent; border-radius: 14px; cursor: pointer; }
+.task-item:hover, .task-item.active { border-color: var(--line); background: var(--surface-strong); }
+.task-item.active { border-left-color: var(--accent); }
+.task-check { width: 20px; height: 20px; margin: 0; accent-color: var(--accent-strong); cursor: pointer; }
+.task-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-item.done .task-text { color: var(--muted); text-decoration: line-through; }
+.delete-task { border: 0; background: transparent; color: var(--muted); cursor: pointer; opacity: 0; }
+.task-item:hover .delete-task, .delete-task:focus-visible { opacity: 1; }
+.empty-state { margin: 44px auto; max-width: 240px; color: var(--muted); font-size: 0.86rem; line-height: 1.6; text-align: center; }
+
+footer { display: flex; justify-content: center; gap: 9px; padding: 38px 0 48px; color: var(--muted); font-size: 0.76rem; }
+footer p { margin: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 840px) {
+  .hero { padding-top: 38px; }
+  .workspace { grid-template-columns: 1fr; }
+  .timer-card { min-height: auto; }
+}
+
+@media (max-width: 520px) {
+  .site-header, main, footer { width: min(100% - 24px, 1160px); }
+  .site-header { padding-top: 18px; }
+  .hero { padding: 30px 4px 38px; }
+  .hero h1 { font-size: 3.4rem; }
+  .timer-card, .stats, .tasks { padding: 18px; border-radius: 22px; }
+  .mode-tabs { width: 100%; }
+  .mode-tab { flex: 1; padding-inline: 8px; }
+  .timer-shell { margin-top: 26px; }
+  .timer-actions button { min-width: 0; flex: 1; }
+  footer { flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}
