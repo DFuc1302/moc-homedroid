@@ -97,9 +97,10 @@ async function initialize(dataDir, pairingKeyOverride) {
   await mkdir(dataDir, { recursive: true });
   const authFile = path.join(dataDir, "auth.json");
   let auth = await readStoredJson(authFile, null);
+  const envPairingHash = pairingKeyOverride && pairingKeyOverride.length >= 24 ? hash(pairingKeyOverride) : null;
   if (!auth) {
-    if (!pairingKeyOverride || pairingKeyOverride.length < 24) throw new Error("PAIRING_KEY with at least 24 characters is required for first start");
-    auth = { pairingHash: hash(pairingKeyOverride), sessions: [] };
+    if (!envPairingHash) throw new Error("PAIRING_KEY with at least 24 characters is required for first start");
+    auth = { pairingHash: envPairingHash, sessions: [] };
     await atomicWrite(authFile, auth);
   }
   const stateFile = path.join(dataDir, "state.json");
@@ -109,7 +110,7 @@ async function initialize(dataDir, pairingKeyOverride) {
     const error = validateState(state);
     if (error) throw new Error(`Stored state rejected: ${error}`);
   }
-  return { authFile, stateFile, auth };
+  return { authFile, stateFile, auth, envPairingHash };
 }
 
 function bearer(req) {
@@ -141,7 +142,8 @@ async function serveStatic(pathname, res) {
   try {
     const info = await stat(file);
     if (!info.isFile()) throw Object.assign(new Error(), { code: "ENOENT" });
-    res.writeHead(200, { "content-type": types[ext] || "application/octet-stream", "cache-control": ext === ".html" ? "no-cache" : "public, max-age=3600" });
+    const noCacheExts = new Set([".html", ".css", ".js", ".mjs"]);
+    res.writeHead(200, { "content-type": types[ext] || "application/octet-stream", "cache-control": noCacheExts.has(ext) ? "no-cache" : "public, max-age=3600" });
     res.end(await readFile(file));
   } catch (error) {
     if (error.code === "ENOENT") return json(res, 404, { error: "not_found" });
@@ -165,7 +167,13 @@ export async function createApp(options = {}) {
         if (recent.length >= 5) return json(res, 429, { error: "rate_limited" }, { "retry-after": "60" });
         recent.push(Date.now()); claimAttempts.set(client, recent);
         const body = await readJson(req);
-        if (typeof body.key !== "string" || !sameHash(store.auth.pairingHash, hash(body.key))) return json(res, 401, { error: "invalid_pairing_key" });
+        const candidateHash = typeof body.key === "string" ? hash(body.key) : "";
+        const validKey = Boolean(candidateHash) && (
+          sameHash(store.auth.pairingHash, candidateHash) ||
+          (store.envPairingHash && sameHash(store.envPairingHash, candidateHash)) ||
+          (Array.isArray(store.auth.allowedHashes) && store.auth.allowedHashes.some((item) => sameHash(item, candidateHash)))
+        );
+        if (!validKey) return json(res, 401, { error: "invalid_pairing_key" });
         const token = randomBytes(32).toString("base64url");
         store.auth.sessions.push({ hash: hash(token), createdAt: new Date().toISOString() });
         store.auth.sessions = store.auth.sessions.slice(-SESSION_LIMIT);

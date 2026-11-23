@@ -3,14 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#13231d">
+  <meta name="theme-color" content="#070b14">
   <meta name="description" content="DataLab — ứng dụng tự học Data Science, Deep Learning và LLM trên HomeDroid.">
-  <title>DataLab</title>
-  <link rel="stylesheet" href="/styles.css?v=3">
+  <title>DataLab · Không gian học AI & Data Science</title>
+  <link rel="stylesheet" href="/styles.css?v=4">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#/" aria-label="DataLab, về tổng quan"><span class="brand-mark">D</span><span>DataLab</span></a>
+    <a class="brand" href="#/" aria-label="DataLab, về tổng quan">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span>DataLab</span>
+    </a>
     <nav aria-label="Điều hướng chính">
       <a href="#/">Tổng quan</a>
       <a href="#/course">Khóa học</a>
@@ -27,14 +30,14 @@
     <form id="pair-form">
       <p class="eyebrow">Thiết bị mới</p>
       <h1 id="pair-title">Kết nối với DataLab</h1>
-      <p>Nhập pairing key đã cấu hình bí mật trong deployment HomeDroid.</p>
-      <label>Pairing key<input id="pair-key" name="key" type="password" autocomplete="off" required></label>
+      <p class="muted">Nhập pairing key đã cấu hình bí mật trong deployment HomeDroid để đồng bộ tiến độ học tập.</p>
+      <label for="pair-key">Pairing key<input id="pair-key" name="key" type="password" autocomplete="off" placeholder="Nhập pairing key (≥ 24 ký tự)…" required></label>
       <p class="error" id="pair-error" role="alert"></p>
-      <button class="primary" type="submit">Kết nối</button>
+      <button class="primary" type="submit">Kết nối thiết bị</button>
     </form>
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="/app.js"></script>
+  <script type="module" src="/app.js?v=4"></script>
 </body>
 </html>

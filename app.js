@@ -140,7 +140,7 @@ function renderDashboard() {
 
 function lessonLink(lesson) {
   const saved = lessonState(lesson.id);
-  return `<a class="lesson-link" href="#/lesson/${lesson.id}"><span class="week">${lesson.week}</span><span><strong>${escapeHtml(lesson.title)}</strong><br><small class="muted">${escapeHtml(lesson.artifact)}</small></span><span class="status">${statusLabel(saved.status)}${saved.bestQuizScore !== null ? ` · ${saved.bestQuizScore}%` : ""}</span></a>`;
+  return `<a class="lesson-link" href="#/lesson/${lesson.id}"><span class="week">${lesson.week}</span><span class="lesson-meta"><strong>${escapeHtml(lesson.title)}</strong><small class="muted">${escapeHtml(lesson.artifact)}</small></span><span class="status status-${saved.status}">${statusLabel(saved.status)}${saved.bestQuizScore !== null ? ` · ${saved.bestQuizScore}%` : ""}</span></a>`;
 }
 
 function renderCourse() {
@@ -149,9 +149,12 @@ function renderCourse() {
     <div class="module-list">${course.modules.map((module, index) => {
       const done = module.lessons.filter((lesson) => lessonState(lesson.id).status === "completed").length;
       const score = state.moduleAssessments[module.id] ?? null;
-      return `<details class="module card" ${index === Math.floor((nextLesson().week - 1) / 4) ? "open" : ""}><summary><span>Module ${index + 1} · ${escapeHtml(module.title)}</span><span class="status">${moduleCompleted(module) ? "Hoàn thành" : `${done}/4 · assessment ${score ?? "—"}%`}</span></summary><div class="lesson-list">${module.lessons.map(lessonLink).join("")}<a class="lesson-link" href="#/assessment/${module.id}"><span class="week">A${index + 1}</span><span><strong>${escapeHtml(module.assessment.title)}</strong><br><small class="muted">Cần đủ 4 bài và đạt ít nhất 70%</small></span><span class="status">${score ?? "—"}%</span></a></div></details>`;
+      const modComplete = moduleCompleted(module);
+      const modStatusClass = modComplete ? "status-completed" : (done > 0 || score !== null) ? "status-in_progress" : "status-not_started";
+      const assessStatusClass = (score ?? 0) >= module.assessment.threshold ? "status-completed" : score !== null ? "status-in_progress" : "status-not_started";
+      return `<details class="module card" ${index === Math.floor((nextLesson().week - 1) / 4) ? "open" : ""}><summary><span>Module ${index + 1} · ${escapeHtml(module.title)}</span><span class="status ${modStatusClass}">${modComplete ? "Hoàn thành" : `${done}/4 · assessment ${score ?? "—"}%`}</span></summary><div class="lesson-list">${module.lessons.map(lessonLink).join("")}<a class="lesson-link" href="#/assessment/${module.id}"><span class="week week-assessment">A${index + 1}</span><span class="lesson-meta"><strong>${escapeHtml(module.assessment.title)}</strong><small class="muted">Cần đủ 4 bài và đạt ít nhất 70%</small></span><span class="status ${assessStatusClass}">${score ?? "—"}%</span></a></div></details>`;
     }).join("")}</div>
-    <section class="card panel" style="margin-top:18px"><p class="eyebrow">Tuần 37–39</p><h2>Học bù, đánh giá và demo</h2><div class="lesson-list">${course.bufferWeeks.map((week) => { const saved = bufferState(week.id); return `<a class="lesson-link" href="#/buffer/${week.id}"><span class="week">${week.week}</span><span><strong>${escapeHtml(week.title)}</strong><br><small class="muted">${escapeHtml(week.artifact)}</small></span><span class="status">${statusLabel(saved.status)}</span></a>`; }).join("")}</div></section>`;
+    <section class="card panel" style="margin-top:20px"><p class="eyebrow">Tuần 37–39</p><h2>Học bù, đánh giá và demo</h2><div class="lesson-list">${course.bufferWeeks.map((week) => { const saved = bufferState(week.id); return `<a class="lesson-link" href="#/buffer/${week.id}"><span class="week">${week.week}</span><span class="lesson-meta"><strong>${escapeHtml(week.title)}</strong><small class="muted">${escapeHtml(week.artifact)}</small></span><span class="status status-${saved.status}">${statusLabel(saved.status)}</span></a>`; }).join("")}</div></section>`;
 }
 
 function renderAssessment(moduleId) {
@@ -161,7 +164,7 @@ function renderAssessment(moduleId) {
   const lessonCount = module.lessons.filter((lesson) => lessonState(lesson.id).status === "completed").length;
   app.innerHTML = `<section class="hero"><div><p class="eyebrow">${escapeHtml(module.title)}</p><h1>${escapeHtml(module.assessment.title)}</h1><p>Assessment kiểm tra artifact và quy tắc kiểm chứng của cả bốn tuần. Module chỉ hoàn thành khi đủ bốn bài và điểm assessment ít nhất 70%.</p></div></section>
     <section class="card panel"><p class="${lessonCount < 4 ? "error" : "muted"}">Bài bắt buộc: ${lessonCount}/4 · Điểm tốt nhất: ${score ?? "—"}%</p>
-    <form id="assessment-form">${module.assessment.questions.map((question, qIndex) => `<fieldset class="quiz-question"><legend><strong>${qIndex + 1}. ${escapeHtml(question.prompt)}</strong></legend><div class="answers">${question.options.map((option, index) => `<label class="answer"><input type="radio" name="${question.id}" value="${index}" required> ${escapeHtml(option)}</label>`).join("")}</div><div class="quiz-feedback"></div></fieldset>`).join("")}<button class="primary" type="submit">Chấm assessment</button></form></section>`;
+    <form id="assessment-form">${module.assessment.questions.map((question, qIndex) => `<fieldset class="quiz-question"><legend><strong>${qIndex + 1}. ${escapeHtml(question.prompt)}</strong></legend><div class="answers">${question.options.map((option, index) => `<label class="answer"><input type="radio" name="${question.id}" value="${index}" required> <span>${escapeHtml(option)}</span></label>`).join("")}</div><div class="quiz-feedback"></div></fieldset>`).join("")}<div class="button-row"><button class="primary" type="submit">Chấm assessment</button><a class="secondary" href="#/course">Về khóa học</a></div></form></section>`;
   document.querySelector("#assessment-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -188,7 +191,7 @@ function renderBufferWeek(id) {
   if (!week) { location.hash = "#/course"; return; }
   const saved = bufferState(id);
   app.innerHTML = `<section class="hero"><div><p class="eyebrow">Tuần ${week.week}</p><h1>${escapeHtml(week.title)}</h1><p>${escapeHtml(week.objective)}</p></div></section>
-    <section class="card panel"><h2>Checklist</h2>${week.tasks.map((task, index) => `<label><input type="checkbox" data-buffer-check="${index}" ${saved.checks.includes(index) ? "checked" : ""}> ${escapeHtml(task)}</label>`).join("")}
+    <section class="card panel"><h2>Checklist</h2><div class="check-list">${week.tasks.map((task, index) => `<label class="check-item"><input type="checkbox" data-buffer-check="${index}" ${saved.checks.includes(index) ? "checked" : ""}> <span>${escapeHtml(task)}</span></label>`).join("")}</div>
     <label>Artifact<input id="buffer-artifact" maxlength="1000" value="${escapeHtml(saved.artifact || "")}" placeholder="${escapeHtml(week.artifact)}"></label>
     <div class="button-row"><button class="primary" id="complete-buffer" type="button">${saved.status === "completed" ? "Đã hoàn thành" : "Hoàn thành tuần"}</button><a class="secondary" href="#/course">Về khóa học</a></div><p class="error" id="buffer-error"></p></section>`;
   const saveDraft = async () => {
@@ -234,7 +237,7 @@ function renderLesson(id) {
     </article>
     <aside class="lesson-side card">
       <p class="eyebrow">Tiêu chí hoàn thành</p>
-      ${lesson.criteria.map((criterion, index) => `<label><input type="checkbox" data-check="${index}" ${saved.checks.includes(index) ? "checked" : ""}> <span>${escapeHtml(criterion)}</span></label>`).join("")}
+      <div class="check-list">${lesson.criteria.map((criterion, index) => `<label class="check-item"><input type="checkbox" data-check="${index}" ${saved.checks.includes(index) ? "checked" : ""}> <span>${escapeHtml(criterion)}</span></label>`).join("")}</div>
       <label>Artifact<input id="artifact" maxlength="1000" value="${escapeHtml(saved.artifact || "")}" placeholder="Đường dẫn hoặc mô tả bằng chứng"></label>
       <p class="muted">Quiz tốt nhất: <strong>${saved.bestQuizScore ?? "—"}%</strong></p>
       <button class="primary" id="complete-lesson" type="button">${saved.status === "completed" ? "Đã hoàn thành" : "Đánh dấu hoàn thành"}</button>
@@ -251,7 +254,7 @@ function runnerView(lesson) {
 }
 
 function quizView(lesson, saved) {
-  return `<form id="quiz-form">${lesson.quiz.map((question, qIndex) => `<fieldset class="quiz-question"><legend><strong>${qIndex + 1}. ${escapeHtml(question.prompt)}</strong></legend><div class="answers">${question.options.map((option, index) => `<label class="answer"><input type="radio" name="${question.id}" value="${index}" required> ${escapeHtml(option)}</label>`).join("")}</div><div class="quiz-feedback"></div></fieldset>`).join("")}<button class="primary" type="submit">Chấm quiz</button>${saved.bestQuizScore !== null ? `<p>Điểm tốt nhất: ${saved.bestQuizScore}%</p>` : ""}</form>`;
+  return `<form id="quiz-form">${lesson.quiz.map((question, qIndex) => `<fieldset class="quiz-question"><legend><strong>${qIndex + 1}. ${escapeHtml(question.prompt)}</strong></legend><div class="answers">${question.options.map((option, index) => `<label class="answer"><input type="radio" name="${question.id}" value="${index}" required> <span>${escapeHtml(option)}</span></label>`).join("")}</div><div class="quiz-feedback"></div></fieldset>`).join("")}<button class="primary" type="submit">Chấm quiz</button>${saved.bestQuizScore !== null ? `<p class="muted">Điểm tốt nhất: <strong>${saved.bestQuizScore}%</strong></p>` : ""}</form>`;
 }
 
 function bindLesson(lesson) {
