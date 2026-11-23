@@ -1,0 +1,17 @@
+{
+  "name": "datalab-homedroid",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vietnamese Data Science and Deep Learning learning app for HomeDroid",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pyodide": "0.29.3"
+  }
+}

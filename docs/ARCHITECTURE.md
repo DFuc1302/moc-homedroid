@@ -60,8 +60,8 @@ flowchart LR
 
 ## Xác thực và pairing
 
-1. Lần chạy đầu, server tạo pairing key ngẫu nhiên độ entropy cao và chỉ hiển thị một lần trong log/UI HomeDroid phù hợp.
-2. Server chỉ lưu hash của key.
+1. Trước lần chạy đầu, quản trị viên cấu hình pairing key ngẫu nhiên độ entropy cao qua secret environment và lưu trong password manager; server không ghi key vào log.
+2. Server chỉ lưu hash của key; key không xuất hiện trong state hoặc backup.
 3. `POST /api/pair/claim` đổi key lấy session token.
 4. Session token được lưu an toàn phía client theo khả năng của môi trường LAN và có thể thu hồi.
 5. So sánh secret constant-time; rate-limit claim và tutor.
