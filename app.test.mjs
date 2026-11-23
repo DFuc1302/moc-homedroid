@@ -26,16 +26,24 @@ async function request(base, route, token, options = {}) {
   return fetch(`${base}${route}`, { ...options, headers: { ...(options.body ? { "content-type": "application/json" } : {}), authorization: `Bearer ${token}`, ...options.headers } });
 }
 
-test("course contains 9 valid modules and 36 complete lessons", () => {
+test("course contains 9 assessed modules, 36 lessons, and weeks 37-39", () => {
   assert.deepEqual(validateCourse(), []);
   assert.equal(course.modules.length, 9);
+  assert.deepEqual(course.bufferWeeks.map((week) => week.week), [37, 38, 39]);
   const lessons = course.modules.flatMap((module) => module.lessons);
   assert.equal(lessons.length, 36);
-  for (const lesson of lessons) {
-    assert.ok(lesson.objectives.length >= 2);
-    assert.ok(lesson.concept && lesson.example.code && lesson.practice && lesson.artifact);
-    assert.ok(lesson.quiz.length >= 5 && lesson.flashcards.length >= 3);
+  const prompts = new Set();
+  for (const module of course.modules) {
+    assert.equal(module.assessment.threshold, 70);
+    assert.equal(module.assessment.questions.length, 5);
+    for (const lesson of module.lessons) {
+      assert.ok(lesson.objectives.length >= 2);
+      assert.ok(lesson.concept && lesson.example.code && lesson.practice && lesson.artifact);
+      assert.ok(lesson.quiz.length >= 5 && lesson.flashcards.length >= 3);
+      for (const question of lesson.quiz) prompts.add(question.prompt);
+    }
   }
+  assert.equal(prompts.size, 180, "every lesson quiz prompt must be lesson-specific");
 });
 
 test("completion gate rejects incomplete lessons", () => {
@@ -47,6 +55,17 @@ test("completion gate rejects incomplete lessons", () => {
   assert.equal(validateState(state), "completion_requirements_not_met");
   state.lessons["m01-w01"].bestQuizScore = 80;
   assert.equal(validateState(state), null);
+});
+
+test("module assessment and buffer week state enforce score and artifact bounds", () => {
+  const state = defaultState();
+  state.moduleAssessments.m01 = 70;
+  state.bufferWeeks.w37 = { status: "completed", checks: [0, 1], artifact: "retrospective", completedAt: new Date().toISOString() };
+  assert.equal(validateState(state), "buffer_completion_requirements_not_met");
+  state.bufferWeeks.w37.checks.push(2);
+  assert.equal(validateState(state), null);
+  state.moduleAssessments.m01 = 101;
+  assert.equal(validateState(state), "invalid_module_assessments");
 });
 
 test("pairing protects state and optimistic revisions preserve new data", async () => {

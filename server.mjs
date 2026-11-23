@@ -10,6 +10,8 @@ const MAX_JSON = 256 * 1024;
 const SESSION_LIMIT = 8;
 const claimAttempts = new Map();
 const lessonIds = new Set(course.modules.flatMap((module) => module.lessons.map((lesson) => lesson.id)));
+const moduleIds = new Set(course.modules.map((module) => module.id));
+const bufferWeekIds = new Set(course.bufferWeeks.map((week) => week.id));
 let writeQueue = Promise.resolve();
 
 export function defaultState() {
@@ -17,7 +19,8 @@ export function defaultState() {
     schemaVersion: 1,
     revision: 0,
     profile: { displayName: "", startedAt: null, weeklyHours: 3 },
-    lessons: {}, quizAttempts: [], reviewItems: [], notes: {}, activityDays: [],
+    lessons: {}, moduleAssessments: {}, bufferWeeks: {},
+    quizAttempts: [], reviewItems: [], notes: {}, activityDays: [],
     settings: { tutorEnabled: true }
   };
 }
@@ -65,6 +68,16 @@ function validateState(state) {
     if (lesson.bestQuizScore !== null && (!Number.isInteger(lesson.bestQuizScore) || lesson.bestQuizScore < 0 || lesson.bestQuizScore > 100)) return "invalid_quiz_score";
     if (lesson.status === "completed" && (new Set(lesson.checks).size < 3 || lesson.bestQuizScore < 70 || typeof lesson.artifact !== "string" || !lesson.artifact.trim())) return "completion_requirements_not_met";
     if (lesson.artifact && (typeof lesson.artifact !== "string" || lesson.artifact.length > 1000)) return "invalid_artifact";
+  }
+  if (state.moduleAssessments !== undefined && (!state.moduleAssessments || Array.isArray(state.moduleAssessments) || Object.entries(state.moduleAssessments).some(([id, score]) => !moduleIds.has(id) || !Number.isInteger(score) || score < 0 || score > 100))) return "invalid_module_assessments";
+  if (state.bufferWeeks !== undefined) {
+    if (!state.bufferWeeks || Array.isArray(state.bufferWeeks)) return "invalid_buffer_weeks";
+    for (const [id, week] of Object.entries(state.bufferWeeks)) {
+      if (!bufferWeekIds.has(id) || !["not_started", "in_progress", "completed"].includes(week.status)) return "invalid_buffer_week";
+      if (!Array.isArray(week.checks) || week.checks.some((check) => !Number.isInteger(check) || check < 0 || check > 2)) return "invalid_buffer_checks";
+      if (week.artifact && (typeof week.artifact !== "string" || week.artifact.length > 1000)) return "invalid_buffer_artifact";
+      if (week.status === "completed" && (new Set(week.checks).size < 3 || typeof week.artifact !== "string" || !week.artifact.trim())) return "buffer_completion_requirements_not_met";
+    }
   }
   if (!state.notes || Object.values(state.notes).some((note) => typeof note !== "string" || note.length > 5000)) return "invalid_notes";
   if (!Array.isArray(state.quizAttempts) || state.quizAttempts.length > 1000) return "invalid_attempts";

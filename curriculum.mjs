@@ -76,18 +76,24 @@ export const course = {
           quiz: makeQuiz(id, title, artifact, concept, result),
           references: ["Nội dung được biên soạn theo Python, NumPy, pandas, scikit-learn và PyTorch documentation; tài liệu ngoài chỉ để đọc thêm."]
         };
-      })
+      }),
+      assessment: makeAssessment(`m${String(moduleIndex + 1).padStart(2,"0")}`, moduleWeeks)
     };
-  })
+  }),
+  bufferWeeks: [
+    { id: "w37", week: 37, title: "Học bù và xử lý review queue", objective: "Đóng các bài còn thiếu và giải quyết toàn bộ câu sai đang chờ ôn.", tasks: ["Lọc bài chưa hoàn thành và chọn tối đa ba lỗ hổng quan trọng", "Làm lại quiz dưới 70% mà không nhìn đáp án", "Xử lý review queue và ghi lại điều đã hiểu"], artifact: "Retrospective ngắn liệt kê lỗ hổng đã đóng và bằng chứng." },
+    { id: "w38", week: 38, title: "Đánh giá tổng hợp", objective: "Kiểm tra khả năng nối dữ liệu, mô hình, đánh giá và RAG thành một quy trình có bằng chứng.", tasks: ["Chọn một dataset nhỏ và tạo baseline", "Nêu split, metric và ba failure modes", "Phác thảo retriever/generator cùng cách đánh giá riêng"], artifact: "Báo cáo assessment tổng hợp có baseline, metric và failure analysis." },
+    { id: "w39", week: 39, title: "Demo và kế hoạch tiếp theo", objective: "Trình diễn dự án cuối, nhìn lại 9 tháng và chọn hướng phát triển sáu tháng.", tasks: ["Chạy demo từ môi trường sạch theo README", "Trình bày kết quả, giới hạn và một thất bại quan trọng", "Viết kế hoạch sáu tháng với mục tiêu đo được"], artifact: "Video/demo, retrospective và kế hoạch sáu tháng." }
+  ]
 };
 
 function makeQuiz(id, title, artifact, concept, result) {
   const questions = [
-    ["Bước nào nên làm trước khi tối ưu?", "Xác định mục tiêu và tạo baseline có thể kiểm chứng", ["Tăng độ phức tạp ngay", "Chọn kết quả đẹp nhất", "Bỏ qua dữ liệu lỗi"], "Baseline và mục tiêu tạo mốc so sánh khách quan."],
-    [`Artifact bắt buộc của bài ${title} là gì?`, artifact, ["Chỉ đọc khái niệm", "Một ảnh chụp không có mã nguồn", "Không cần lưu kết quả"], `Artifact đã quy định: ${artifact}.`],
-    ["Cách nào giúp kết quả tái tạo được?", "Lưu code, dữ liệu/config và hướng dẫn chạy", ["Chỉ ghi điểm cuối", "Thay nhiều yếu tố cùng lúc", "Chạy lại cho tới khi đẹp"], "Code, input/config và README là chuỗi bằng chứng tối thiểu."],
-    ["Khi kết quả trái kỳ vọng, hành động tốt nhất là gì?", "Kiểm tra giả định bằng ví dụ nhỏ và ghi lại quan sát", ["Ẩn kết quả", "Đổi metric sau khi xem test", "Kết luận model sai ngay"], "Ví dụ nhỏ cô lập nguyên nhân; quan sát phải tách khỏi suy đoán."],
-    ["Phát biểu nào phù hợp nhất với bài học?", result, ["Metric cao luôn đủ để triển khai", "Dữ liệu test dùng để tuning", "Không cần nêu giới hạn"], concept]
+    [`Trong bài “${title}”, bước nào chứng minh bạn hiểu khái niệm thay vì chỉ chạy code?`, `Diễn giải và kiểm chứng: ${concept}`, [`Chép nguyên output mẫu`, `Bỏ qua giả định của ${title}`, "Chỉ ghi điểm cuối"], `Bài này yêu cầu hiểu và kiểm chứng: ${concept}`],
+    [`Bằng chứng bắt buộc riêng của bài “${title}” là gì?`, artifact, [`Một ảnh không có mã nguồn của ${title}`, "Chỉ đọc hết màn hình", "Không lưu đầu vào và output"], `Artifact đã quy định cho bài này: ${artifact}.`],
+    [`Khi tái tạo “${artifact}”, gói thông tin nào phải đi cùng code?`, `Dữ liệu/config, dependency và hướng dẫn chạy ${artifact}`, ["Chỉ tên model", "Chỉ metric tốt nhất", "Không cần version"], `Artifact ${artifact} phải chạy lại được từ môi trường sạch.`],
+    [`Nếu kết quả của bài “${title}” trái kỳ vọng, kiểm tra nào phù hợp nhất?`, `Dùng ví dụ nhỏ để kiểm chứng “${result}” và ghi lại quan sát`, ["Đổi metric sau khi xem test", `Ẩn failure của ${title}`, "Tăng độ phức tạp ngay"], `Quy tắc kiểm chứng của bài: ${result}`],
+    [`Kết luận nào đúng riêng cho “${title}”?`, result, [`${title} luôn đúng với mọi dữ liệu`, "Có thể tuning trực tiếp trên test", "Không cần nêu giới hạn"], concept]
   ];
   return questions.map((q, index) => {
     const correct = q[1];
@@ -98,12 +104,26 @@ function makeQuiz(id, title, artifact, concept, result) {
   });
 }
 
+function makeAssessment(moduleId, moduleWeeks) {
+  const questions = moduleWeeks.map((row, index) => {
+    const title = row[2], artifact = row[3], result = row[6];
+    const alternatives = moduleWeeks.filter((_, other) => other !== index).map((other) => other[3]);
+    const options = [artifact, ...alternatives];
+    const rotation = (index + moduleId.length) % options.length;
+    const rotated = options.slice(rotation).concat(options.slice(0, rotation));
+    return { id: `${moduleId}-a${index + 1}`, prompt: `Artifact nào chứng minh năng lực “${title}”?`, options: rotated, answer: rotated.indexOf(artifact), explanation: `${artifact}. ${result}` };
+  });
+  questions.push({ id: `${moduleId}-a5`, prompt: "Khi nào module được hoàn thành?", options: ["Đủ bốn bài bắt buộc và assessment đạt ít nhất 70%", "Chỉ cần mở đủ bốn bài", "Một quiz bất kỳ đạt 70%", "Chỉ cần nộp artifact cuối"], answer: 0, explanation: "Module gate yêu cầu mọi bài bắt buộc hoàn thành và assessment cuối module đạt tối thiểu 70%." });
+  return { id: `${moduleId}-assessment`, title: "Assessment cuối module", threshold: 70, questions };
+}
+
 export function validateCourse(value = course) {
   const errors = [];
   const lessonIds = new Set();
   if (value.modules.length !== 9) errors.push("Course must have 9 modules");
   for (const module of value.modules) {
     if (module.lessons.length !== 4) errors.push(`${module.id} must have 4 lessons`);
+    if (module.assessment?.questions.length !== 5 || module.assessment.threshold !== 70) errors.push(`${module.id} needs a five-question 70% assessment`);
     for (const lesson of module.lessons) {
       if (lessonIds.has(lesson.id)) errors.push(`Duplicate lesson ${lesson.id}`);
       lessonIds.add(lesson.id);
@@ -111,8 +131,10 @@ export function validateCourse(value = course) {
       if (lesson.flashcards.length < 3) errors.push(`${lesson.id} needs flashcards`);
       for (const question of lesson.quiz) if (!Number.isInteger(question.answer) || !question.options[question.answer]) errors.push(`${question.id} has invalid answer`);
     }
+    for (const question of module.assessment?.questions || []) if (!Number.isInteger(question.answer) || !question.options[question.answer]) errors.push(`${question.id} has invalid answer`);
   }
   for (const lesson of value.modules.flatMap((module) => module.lessons)) if (lesson.prerequisite && !lessonIds.has(lesson.prerequisite)) errors.push(`${lesson.id} prerequisite missing`);
   if (lessonIds.size !== 36) errors.push("Course must have 36 lessons");
+  if (value.bufferWeeks?.length !== 3 || value.bufferWeeks.some((week, index) => week.week !== 37 + index || week.tasks.length !== 3 || !week.artifact)) errors.push("Course must have complete weeks 37-39");
   return errors;
 }

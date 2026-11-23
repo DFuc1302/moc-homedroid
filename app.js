@@ -16,6 +16,8 @@ const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (char) => (
 const allLessons = () => course.modules.flatMap((module) => module.lessons);
 const lessonById = (id) => allLessons().find((lesson) => lesson.id === id);
 const lessonState = (id) => state.lessons[id] || { status: "not_started", checks: [], bestQuizScore: null, completedAt: null, artifact: "" };
+const bufferState = (id) => state.bufferWeeks[id] || { status: "not_started", checks: [], artifact: "", completedAt: null };
+const moduleCompleted = (module) => module.lessons.every((lesson) => lessonState(lesson.id).status === "completed") && (state.moduleAssessments[module.id] ?? 0) >= module.assessment.threshold;
 const today = () => new Date().toLocaleDateString("en-CA");
 const statusLabel = (value) => ({ not_started: "Chưa học", in_progress: "Đang học", completed: "Hoàn thành" })[value] || "Chưa học";
 const api = async (path, options = {}) => {
@@ -57,6 +59,8 @@ async function load() {
   if (!token) return dialog.showModal();
   try {
     [course, state] = await Promise.all([api("/api/content"), api("/api/state")]);
+    state.moduleAssessments ||= {};
+    state.bufferWeeks ||= {};
     route();
   } catch (error) {
     if (error.status !== 401) app.innerHTML = `<section class="card panel"><h1>Không thể tải DataLab</h1><p>${escapeHtml(error.message)}</p></section>`;
@@ -105,8 +109,11 @@ function route() {
   if (!course || !state) return;
   stopRunner();
   const hash = location.hash.slice(1) || "/";
-  document.querySelectorAll("nav a").forEach((link) => link.classList.toggle("active", link.getAttribute("href").slice(1) === (hash.startsWith("/lesson/") ? "/course" : hash)));
+  const courseRoute = hash.startsWith("/lesson/") || hash.startsWith("/assessment/") || hash.startsWith("/buffer/");
+  document.querySelectorAll("nav a").forEach((link) => link.classList.toggle("active", link.getAttribute("href").slice(1) === (courseRoute ? "/course" : hash)));
   if (hash.startsWith("/lesson/")) renderLesson(decodeURIComponent(hash.split("/")[2]));
+  else if (hash.startsWith("/assessment/")) renderAssessment(decodeURIComponent(hash.split("/")[2]));
+  else if (hash.startsWith("/buffer/")) renderBufferWeek(decodeURIComponent(hash.split("/")[2]));
   else if (hash === "/course") renderCourse();
   else if (hash === "/review") renderReview();
   else if (hash === "/settings") renderSettings();
@@ -138,11 +145,69 @@ function lessonLink(lesson) {
 
 function renderCourse() {
   const stats = progress();
-  app.innerHTML = `<section class="hero"><div><p class="eyebrow">Chương trình học</p><h1>36 tuần, 9 module.</h1><p>Mỗi tuần có khái niệm, worked example, thực hành, quiz, artifact và flashcard.</p></div><div class="progress-ring" style="--value:${stats.percent}"><strong>${stats.completed}/36</strong></div></section>
+  app.innerHTML = `<section class="hero"><div><p class="eyebrow">Chương trình học</p><h1>39 tuần, 9 module.</h1><p>36 tuần cốt lõi, assessment cuối mỗi module và ba tuần học bù, đánh giá, demo.</p></div><div class="progress-ring" style="--value:${stats.percent}"><strong>${stats.completed}/36</strong></div></section>
     <div class="module-list">${course.modules.map((module, index) => {
       const done = module.lessons.filter((lesson) => lessonState(lesson.id).status === "completed").length;
-      return `<details class="module card" ${index === Math.floor(nextLesson().week / 4) ? "open" : ""}><summary><span>Module ${index + 1} · ${escapeHtml(module.title)}</span><span class="status">${done}/4</span></summary><div class="lesson-list">${module.lessons.map(lessonLink).join("")}</div></details>`;
-    }).join("")}</div>`;
+      const score = state.moduleAssessments[module.id] ?? null;
+      return `<details class="module card" ${index === Math.floor((nextLesson().week - 1) / 4) ? "open" : ""}><summary><span>Module ${index + 1} · ${escapeHtml(module.title)}</span><span class="status">${moduleCompleted(module) ? "Hoàn thành" : `${done}/4 · assessment ${score ?? "—"}%`}</span></summary><div class="lesson-list">${module.lessons.map(lessonLink).join("")}<a class="lesson-link" href="#/assessment/${module.id}"><span class="week">A${index + 1}</span><span><strong>${escapeHtml(module.assessment.title)}</strong><br><small class="muted">Cần đủ 4 bài và đạt ít nhất 70%</small></span><span class="status">${score ?? "—"}%</span></a></div></details>`;
+    }).join("")}</div>
+    <section class="card panel" style="margin-top:18px"><p class="eyebrow">Tuần 37–39</p><h2>Học bù, đánh giá và demo</h2><div class="lesson-list">${course.bufferWeeks.map((week) => { const saved = bufferState(week.id); return `<a class="lesson-link" href="#/buffer/${week.id}"><span class="week">${week.week}</span><span><strong>${escapeHtml(week.title)}</strong><br><small class="muted">${escapeHtml(week.artifact)}</small></span><span class="status">${statusLabel(saved.status)}</span></a>`; }).join("")}</div></section>`;
+}
+
+function renderAssessment(moduleId) {
+  const module = course.modules.find((item) => item.id === moduleId);
+  if (!module) { location.hash = "#/course"; return; }
+  const score = state.moduleAssessments[module.id] ?? null;
+  const lessonCount = module.lessons.filter((lesson) => lessonState(lesson.id).status === "completed").length;
+  app.innerHTML = `<section class="hero"><div><p class="eyebrow">${escapeHtml(module.title)}</p><h1>${escapeHtml(module.assessment.title)}</h1><p>Assessment kiểm tra artifact và quy tắc kiểm chứng của cả bốn tuần. Module chỉ hoàn thành khi đủ bốn bài và điểm assessment ít nhất 70%.</p></div></section>
+    <section class="card panel"><p class="${lessonCount < 4 ? "error" : "muted"}">Bài bắt buộc: ${lessonCount}/4 · Điểm tốt nhất: ${score ?? "—"}%</p>
+    <form id="assessment-form">${module.assessment.questions.map((question, qIndex) => `<fieldset class="quiz-question"><legend><strong>${qIndex + 1}. ${escapeHtml(question.prompt)}</strong></legend><div class="answers">${question.options.map((option, index) => `<label class="answer"><input type="radio" name="${question.id}" value="${index}" required> ${escapeHtml(option)}</label>`).join("")}</div><div class="quiz-feedback"></div></fieldset>`).join("")}<button class="primary" type="submit">Chấm assessment</button></form></section>`;
+  document.querySelector("#assessment-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    let correct = 0;
+    module.assessment.questions.forEach((question, index) => {
+      const selected = Number(data.get(question.id));
+      const field = event.currentTarget.querySelectorAll(".quiz-question")[index];
+      field.querySelectorAll(".answer").forEach((answer, option) => {
+        answer.classList.toggle("correct", option === question.answer);
+        answer.classList.toggle("wrong", option === selected && option !== question.answer);
+      });
+      field.querySelector(".quiz-feedback").innerHTML = `<p class="explanation">${escapeHtml(question.explanation)}</p>`;
+      if (selected === question.answer) correct += 1;
+    });
+    const assessmentScore = Math.round(correct / module.assessment.questions.length * 100);
+    const next = changedState();
+    next.moduleAssessments[module.id] = Math.max(next.moduleAssessments[module.id] ?? 0, assessmentScore);
+    if (await save(next, `Assessment: ${assessmentScore}%`)) renderAssessment(module.id);
+  });
+}
+
+function renderBufferWeek(id) {
+  const week = course.bufferWeeks.find((item) => item.id === id);
+  if (!week) { location.hash = "#/course"; return; }
+  const saved = bufferState(id);
+  app.innerHTML = `<section class="hero"><div><p class="eyebrow">Tuần ${week.week}</p><h1>${escapeHtml(week.title)}</h1><p>${escapeHtml(week.objective)}</p></div></section>
+    <section class="card panel"><h2>Checklist</h2>${week.tasks.map((task, index) => `<label><input type="checkbox" data-buffer-check="${index}" ${saved.checks.includes(index) ? "checked" : ""}> ${escapeHtml(task)}</label>`).join("")}
+    <label>Artifact<input id="buffer-artifact" maxlength="1000" value="${escapeHtml(saved.artifact || "")}" placeholder="${escapeHtml(week.artifact)}"></label>
+    <div class="button-row"><button class="primary" id="complete-buffer" type="button">${saved.status === "completed" ? "Đã hoàn thành" : "Hoàn thành tuần"}</button><a class="secondary" href="#/course">Về khóa học</a></div><p class="error" id="buffer-error"></p></section>`;
+  const saveDraft = async () => {
+    const next = changedState();
+    const current = { ...bufferState(id), status: "in_progress", checks: [...document.querySelectorAll("[data-buffer-check]:checked")].map((input) => Number(input.dataset.bufferCheck)), artifact: document.querySelector("#buffer-artifact").value.trim() };
+    next.bufferWeeks[id] = current;
+    return save(next);
+  };
+  document.querySelectorAll("[data-buffer-check]").forEach((input) => input.addEventListener("change", saveDraft));
+  document.querySelector("#buffer-artifact").addEventListener("change", saveDraft);
+  document.querySelector("#complete-buffer").addEventListener("click", async () => {
+    await saveDraft();
+    const current = bufferState(id);
+    const error = document.querySelector("#buffer-error");
+    if (new Set(current.checks).size < 3) return error.textContent = "Hoàn thành đủ ba checklist.";
+    if (!current.artifact?.trim()) return error.textContent = "Thêm mô tả hoặc đường dẫn artifact.";
+    const next = changedState(); next.bufferWeeks[id] = { ...current, status: "completed", completedAt: new Date().toISOString() };
+    if (await save(next, `Đã hoàn thành tuần ${week.week}`)) renderBufferWeek(id);
+  });
 }
 
 function renderLesson(id) {
