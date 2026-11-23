@@ -26,8 +26,8 @@
   --radius-sm: 8px;
   --radius: 16px;
   --radius-lg: 24px;
-  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-sans: "Times New Roman", Times, serif;
+  --font-display: "Times New Roman", Times, serif;
   --font-mono: "Fira Code", "Roboto Mono", monospace;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 12px 32px -8px rgba(0, 0, 0, 0.45);
