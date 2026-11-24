@@ -105,6 +105,7 @@ Không dùng quy trình copy bốn file source trực tiếp qua ADB để deplo
 - Điểm module assessment được tính phía client; server kiểm tra chỉ range 0–100, không tái tính đáp án. Đây là progress tracker một người dùng, không phải chứng nhận chống gian lận.
 - Kiểm tra gần nhất: `npm test` — 6/6 pass; `node --check app.js`, `curriculum.mjs`, `server.mjs` pass.
 - Live port `12080` đã trả JavaScript có assessment/buffer routes. Kiểm tra IP LAN hiện tại trước khi dùng, vì DHCP có thể đổi.
+- Local browser smoke trên server/data/key throwaway (2026-11-24): pairing; quiz bài 1 (80%) và lesson completion; assessment m01 (100%); gate + completion tuần 37; Pyodide output `7.5`, timeout vòng lặp vô hạn sau 15 giây, reset; progress sống qua reload và restart server; state export tải được, JSON hợp lệ. Đây không phải test trên deployment thật.
 - Tutor chưa cấu hình (`AI_BASE_URL` trống); phần học còn lại hoạt động độc lập.
 - Pairing secret nằm trong file Windows DPAPI `%USERPROFILE%\.datalab-pairing-key.dpapi`; không ghi secret/dashboard password vào repo hoặc memory. Dashboard password từng xuất hiện trong transcript công cụ; chủ dự án cần xoay password, agents không nhắc lại credential.
 - Hai file untracked `HANDOFF_ORCA_HOMEDROID_ADGUARD.md` và `samloader.log` là dữ liệu có sẵn của người dùng; giữ nguyên, không xóa/commit nếu không được yêu cầu.
