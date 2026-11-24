@@ -214,7 +214,7 @@ export async function createApp(options = {}) {
         if (!lessonIds.has(body.lessonId) || typeof body.question !== "string" || body.question.length < 1 || body.question.length > 2000) return json(res, 400, { error: "invalid_tutor_request" });
         const lesson = course.modules.flatMap((module) => module.lessons).find((item) => item.id === body.lessonId);
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 20_000);
+        const timeout = setTimeout(() => controller.abort(), 120_000);
         try {
           const response = await fetch(`${process.env.AI_BASE_URL.replace(/\/$/, "")}/v1/chat/completions`, {
             method: "POST", signal: controller.signal,
