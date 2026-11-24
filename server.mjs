@@ -231,6 +231,10 @@ export async function createApp(options = {}) {
         finally { clearTimeout(timeout); }
       }
 
+      if (url.pathname === "/favicon.ico" && (req.method === "GET" || req.method === "HEAD")) {
+        res.writeHead(204, { "cache-control": "public, max-age=86400" });
+        return res.end();
+      }
       if (url.pathname.startsWith("/api/")) return json(res, 404, { error: "not_found" });
       if (req.method !== "GET" && req.method !== "HEAD") return json(res, 405, { error: "method_not_allowed" });
       return serveStatic(url.pathname, res);

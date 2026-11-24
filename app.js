@@ -329,16 +329,18 @@ async function submitQuiz(event, lesson) {
 
 async function askTutor(event, lessonId) {
   event.preventDefault();
-  const question = event.currentTarget.question.value.trim();
+  const form = event.currentTarget;
+  const button = form.querySelector("button");
+  const question = form.question.value.trim();
   const log = document.querySelector("#tutor-log");
   log.insertAdjacentHTML("beforeend", `<div class="message user">${escapeHtml(question)}</div>`);
-  event.currentTarget.querySelector("button").disabled = true;
+  button.disabled = true;
   try {
     const result = await api("/api/tutor", { method: "POST", body: JSON.stringify({ lessonId, question }) });
     log.insertAdjacentHTML("beforeend", `<div class="message">${escapeHtml(result.answer)}</div>`);
-    event.currentTarget.reset();
+    form.reset();
   } catch { log.insertAdjacentHTML("beforeend", `<div class="message error">Tutor đang offline. Bạn vẫn có thể tiếp tục bài học.</div>`); }
-  finally { event.currentTarget.querySelector("button").disabled = false; log.scrollTop = log.scrollHeight; }
+  finally { button.disabled = false; log.scrollTop = log.scrollHeight; }
 }
 
 function runPython() {
