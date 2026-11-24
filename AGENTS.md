@@ -25,7 +25,7 @@ Tài liệu này là bộ nhớ dùng chung cho tất cả AI Agents (Antigravit
 - **Các cổng dịch vụ trên HomeDroid:**
   - `12080`: **DataLab** (`http://<phone-ip>:12080`)
   - `8800`: **HomeDroid Dashboard** (`http://<phone-ip>:8800`)
-  - `3000` (Web UI) & `1053` (DNS): **AdGuard Home** module (xem thêm `HANDOFF_ORCA_HOMEDROID_ADGUARD.md`)
+- Cổng AdGuard Home dự kiến: `3000` (Web UI) và `1053` (DNS; xem `HANDOFF_ORCA_HOMEDROID_ADGUARD.md`). Kiểm tra Dashboard → Modules trước khi dùng. Lần kiểm tra gần nhất: module hiển thị `Not installed`, không có listener TCP 3000 hoặc UDP 1053; không cài đặt hay sửa cấu hình.
 - **Cấu trúc đường dẫn trên điện thoại (yêu cầu `su -c` qua `adb shell`):**
   - App UID/GID trên Android: `u0_a244:u0_a244`
   - Cấu hình deployment của HomeDroid: `/data/user/0/dev.homedroid/files/deploys.json`
