@@ -7,10 +7,10 @@ Tài liệu này là bộ nhớ dùng chung cho tất cả AI Agents (Antigravit
 ## 1. Tổng quan dự án
 - **Tên ứng dụng:** **DataLab** (`datalab-homedroid`) — Ứng dụng tự học Data Science, Deep Learning và LLM bằng tiếng Việt trong 9 tháng (36 tuần cốt lõi + 9 bài Assessment cuối mỗi module + 3 tuần Buffer 37–39).
 - **Kiến trúc:**
-  - Zero-dependency backend (`server.mjs` dùng thuần Node.js HTTP server, yêu cầu Node $\ge 20$).
+  - Backend HTTP thuần Node.js (`server.mjs`), yêu cầu Node ≥20; Python runner dùng package Pyodide được bundle cùng repository.
   - Frontend SPA thuần (`index.html`, `styles.css`, `app.js`, `curriculum.mjs`).
-  - Python runner chạy trực tiếp trên trình duyệt qua Web Worker (`python-worker.js` + Pyodide trong `node_modules/pyodide`).
-  - AI Tutor proxy (`/api/tutor`) gọi tới OpenAI-compatible local server trên laptop qua `AI_BASE_URL` (khi offline trả về `503 tutor_offline` và không ảnh hưởng việc học).
+  - Python runner chạy trong Web Worker; chỉ tải khi người học bấm Run.
+  - AI Tutor proxy (`/api/tutor`) gọi OpenAI-compatible local server qua `AI_BASE_URL`; khi laptop offline trả `503 tutor_offline`.
 - **Git Remote:** `https://github.com/DFuc1302/moc-homedroid.git` (nhánh `main`).
 
 ---
@@ -38,11 +38,9 @@ Tài liệu này là bộ nhớ dùng chung cho tất cả AI Agents (Antigravit
 
 ## 3. Cơ chế Xác thực & Pairing Key (`server.mjs` & `auth.json`)
 - **Nguyên tắc bảo mật:** KHÔNG BAO GIỜ ghi hoặc commit chuỗi `PAIRING_KEY` dạng rõ (plain text) vào Git, log, hoặc tài liệu.
-- **Cách `server.mjs` kiểm tra Pairing Key (`POST /api/pair/claim`):**
-  Server chấp nhận key nếu mã băm SHA-256 của key khớp với **một trong ba nguồn**:
-  1. `store.auth.pairingHash` trong file `$DATA_DIR/auth.json`.
-  2. `store.envPairingHash` (băm SHA-256 của biến môi trường `PAIRING_KEY` truyền vào process khi `PAIRING_KEY.length >= 24`, được HomeDroid lưu trong `/data/user/0/dev.homedroid/files/deploys.json`).
-  3. Bất kỳ mã băm nào trong mảng `store.auth.allowedHashes` (nếu có) trong `$DATA_DIR/auth.json`.
+- Pairing key phải được cấu hình qua secret environment `PAIRING_KEY` trước lần tạo `DATA_DIR` đầu tiên; key dài ít nhất 24 ký tự.
+- Server chỉ lưu SHA-256 hash trong `auth.json`; tuyệt đối không in pairing key vào log, commit hoặc tài liệu.
+- Session token cũng chỉ lưu hash; không xóa `DATA_DIR` để khôi phục pairing nếu chưa được chủ dự án cho phép rõ vì việc đó làm mất tiến độ.
 - **Lưu ý quan trọng khi sửa `auth.json` hoặc `state.json` từ Windows:**
   - **TUYỆT ĐỐI KHÔNG** dùng `Set-Content -Encoding UTF8` của Windows PowerShell 5.1 để ghi file JSON đẩy lên điện thoại, vì PowerShell 5.1 chèn ký tự **UTF-8 BOM (`\uFEFF`)** ở đầu file làm `JSON.parse()` trên Node.js bị crash (`SyntaxError: Unexpected token '\uFEFF'`).
   - Luôn dùng Node.js (`fs.writeFileSync(path, JSON.stringify(data, null, 2) + '\n', 'utf8')`) để tạo file JSON không có BOM.
@@ -76,25 +74,37 @@ Trước khi báo cáo hoàn thành bất kỳ thay đổi nào, thực hiện �
 ```powershell
 npm test
 ```
-*(Đảm bảo toàn bộ 6/6 contract tests trong `app.test.mjs` đều pass).*
+*(Hiện `app.test.mjs` có 6 test; chạy `npm test` để biết kết quả thực tế).*
 
-### Bước 2: Commit & Push lên GitHub + Đồng bộ trực tiếp qua ADB
-*(Lưu ý trong PowerShell: dùng dấu nháy kép bên ngoài và nháy đơn bên trong cho `su -c '...'`, tránh dùng ký tự pipe `|` hoặc `$(...)` trực tiếp trong chuỗi nháy kép của PowerShell).*
+### Bước 2: Deploy qua HomeDroid Deployments
+
+1. Push commit lên nhánh `main`; HomeDroid deployment theo dõi Git repository.
+2. Runtime `Node.js`; build command `npm ci`; start command `npm start`.
+3. Port DataLab đang dùng là `12080`; đặt `HOST=0.0.0.0`, `PORT=12080`, `DATA_DIR=/srv/datalab-data`.
+4. Đặt `PAIRING_KEY` trong environment deployment dạng secret trước lần khởi tạo persistent data directory. Không đưa key vào log hoặc form snapshot.
+5. Không public port ra Internet. HomeDroid redeploy lấy source từ Git, giữ nguyên `/srv/datalab-data`.
+
+### Bước 3: Kiểm chứng live deployment
+
 ```powershell
-git push origin main
-
-adb -s R58N53C1AVR push index.html /data/local/tmp/index.html
-adb -s R58N53C1AVR push styles.css /data/local/tmp/styles.css
-adb -s R58N53C1AVR push app.js /data/local/tmp/app.js
-adb -s R58N53C1AVR push server.mjs /data/local/tmp/server.mjs
-
-adb -s R58N53C1AVR shell "su -c 'cp /data/local/tmp/index.html /data/user/0/dev.homedroid/files/alpine/srv/datalab/index.html && cp /data/local/tmp/styles.css /data/user/0/dev.homedroid/files/alpine/srv/datalab/styles.css && cp /data/local/tmp/app.js /data/user/0/dev.homedroid/files/alpine/srv/datalab/app.js && cp /data/local/tmp/server.mjs /data/user/0/dev.homedroid/files/alpine/srv/datalab/server.mjs && chown u0_a244:u0_a244 /data/user/0/dev.homedroid/files/alpine/srv/datalab/index.html /data/user/0/dev.homedroid/files/alpine/srv/datalab/styles.css /data/user/0/dev.homedroid/files/alpine/srv/datalab/app.js /data/user/0/dev.homedroid/files/alpine/srv/datalab/server.mjs && killall -9 node'"
+adb -s R58N53C1AVR shell "ip -4 addr show wlan0"
+curl.exe http://<phone-ip>:12080/api/health
 ```
-*(Supervisor của HomeDroid sẽ tự động khởi động lại `node server.mjs` sau khoảng 3–5 giây).*
 
-### Bước 3: Kiểm chứng Live Health & Log trên thiết bị
-```powershell
-Start-Sleep -Seconds 5
-adb -s R58N53C1AVR shell "su -c 'tail -n 15 /data/user/0/dev.homedroid/files/logs/deploy-datalab.log'"
-curl.exe -i http://192.168.1.251:12080/api/health
-```
+Health phải có `ok: true`, `contentVersion` và `tutor`. Mở UI trên điện thoại/laptop, pair bằng key từ password manager; thử bài học, Python runner và state sau redeploy.
+
+Không dùng quy trình copy bốn file source trực tiếp qua ADB để deploy app hiện tại: app cần `curriculum.mjs`, `python-worker.js`, Pyodide bundle và dependency cài bằng `npm ci`.
+
+## 6. Checkpoint triển khai & handoff (2026-11-24)
+
+- Code assessment/buffer được thêm trong commit `a92b5f5`; UI/QA follow-ups ở các commit sau đó. Không revert commit của Antigravity khi tiếp tục.
+- `curriculum.mjs` định nghĩa 9 module, 36 tuần, assessment 5 câu/module (ngưỡng 70%) và buffer weeks 37–39.
+- `app.js` có route `#/assessment/:moduleId`, `#/buffer/:weekId`; assessment và buffer progress lưu theo state revision.
+- Quiz theo tuần có 180 prompt string duy nhất, nhưng được sinh từ năm mẫu câu lặp; uniqueness test không chứng minh câu hỏi thực sự đa dạng hoặc đánh giá chiều sâu học tập.
+- Các test hiện tại kiểm tra course shape, state validators, pairing/persistence và tutor offline; chưa tự động thử submit assessment/buffer qua browser UI. Chạy UI smoke test trước khi báo hoàn tất các flow này.
+- Điểm module assessment được tính phía client; server kiểm tra chỉ range 0–100, không tái tính đáp án. Đây là progress tracker một người dùng, không phải chứng nhận chống gian lận.
+- Kiểm tra gần nhất: `npm test` — 6/6 pass; `node --check app.js`, `curriculum.mjs`, `server.mjs` pass.
+- Live port `12080` đã trả JavaScript có assessment/buffer routes. Kiểm tra IP LAN hiện tại trước khi dùng, vì DHCP có thể đổi.
+- Tutor chưa cấu hình (`AI_BASE_URL` trống); phần học còn lại hoạt động độc lập.
+- Pairing secret nằm trong file Windows DPAPI `%USERPROFILE%\.datalab-pairing-key.dpapi`; không ghi secret/dashboard password vào repo hoặc memory. Dashboard password từng xuất hiện trong transcript công cụ; chủ dự án cần xoay password, agents không nhắc lại credential.
+- Hai file untracked `HANDOFF_ORCA_HOMEDROID_ADGUARD.md` và `samloader.log` là dữ liệu có sẵn của người dùng; giữ nguyên, không xóa/commit nếu không được yêu cầu.
