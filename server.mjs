@@ -227,7 +227,10 @@ export async function createApp(options = {}) {
           if (!response.ok) throw new Error("upstream_error");
           const payload = await response.json();
           return json(res, 200, { answer: payload.choices?.[0]?.message?.content || "Model không trả về nội dung." });
-        } catch { return json(res, 503, { error: "tutor_offline" }); }
+        } catch (error) {
+          console.error("[DataLab] Tutor request failed", error?.name || "Error", error?.cause?.code || "");
+          return json(res, 503, { error: "tutor_offline" });
+        }
         finally { clearTimeout(timeout); }
       }
 
