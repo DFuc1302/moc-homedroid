@@ -15,8 +15,8 @@ Tài liệu này là bộ nhớ dùng chung cho tất cả AI Agents (Antigravit
 
 ---
 
-## 2. Môi trường thiết bị HomeDroid (Samsung Galaxy A22)
-Ứng dụng được deploy thực tế trên điện thoại Samsung Galaxy A22 chạy app **HomeDroid** (`dev.homedroid`) thông qua proot Alpine Linux:
+## 2. Môi trường thiết bị HomeDroid (Samsung Galaxy A21s, SM-A217F)
+Ứng dụng được deploy thực tế trên Samsung Galaxy A21s (SM-A217F, Exynos 850, Android 12, arm64-v8a, 3 GB RAM) chạy HomeDroid (`dev.homedroid`) thông qua proot Alpine Linux:
 - **ADB Serial:** `R58N53C1AVR`
 - **IP LAN của điện thoại:** Cấp qua DHCP nên có thể thay đổi (từng là `.16`, `.163`, hiện tại là `192.168.1.251`). Luôn kiểm tra IP hiện tại bằng lệnh:
   ```powershell
@@ -106,6 +106,6 @@ Không dùng quy trình copy bốn file source trực tiếp qua ADB để deplo
 - Kiểm tra gần nhất: `npm test` — 6/6 pass; `node --check app.js`, `curriculum.mjs`, `server.mjs` pass.
 - Live port `12080` đã trả JavaScript có assessment/buffer routes. Kiểm tra IP LAN hiện tại trước khi dùng, vì DHCP có thể đổi.
 - Local browser smoke trên server/data/key throwaway (2026-11-24): pairing; quiz bài 1 (80%) và lesson completion; assessment m01 (100%); gate + completion tuần 37; Pyodide output `7.5`, timeout vòng lặp vô hạn sau 15 giây, reset; progress sống qua reload và restart server; state export tải được, JSON hợp lệ. Đây không phải test trên deployment thật.
-- Tutor chưa cấu hình (`AI_BASE_URL` trống); phần học còn lại hoạt động độc lập.
+- Tutor DataLab chưa nối HomeDroid (`AI_BASE_URL` trống; deployment env hiện chỉ có `HOST`, `PORT`, `DATA_DIR`, `PAIRING_KEY`). HomeDroid AI đã bật; llama.cpp chạy model `gemma-3-1b-it-Q4_K_M.gguf` (768.7 MB) trên CPU, context 2048, 4 threads; local API `http://<phone-ip>:8090/v1`. Kiểm thử câu tiếng Việt thành công; benchmark 0.3 words/s, nên kiểm tra câu trả lời dài với timeout tutor 20 giây. GPU không khả dụng, fallback cloud đang tắt. Nếu nối DataLab, `AI_BASE_URL` phải là `http://<phone-ip>:8090` (không thêm `/v1` vì server tự nối endpoint), `AI_MODEL=local/gemma-3-1b-it-q4_k_m`, `AI_API_KEY` lấy từ HomeDroid AI → Use from other apps; tuyệt đối không ghi key vào repo/log. Dashboard Deployments hiện không có nút sửa env của deployment đã tạo; smoke-test sau khi cập nhật cấu hình.
 - Pairing secret nằm trong file Windows DPAPI `%USERPROFILE%\.datalab-pairing-key.dpapi`; không ghi secret/dashboard password vào repo hoặc memory. Dashboard password từng xuất hiện trong transcript công cụ; chủ dự án cần xoay password, agents không nhắc lại credential.
 - Hai file untracked `HANDOFF_ORCA_HOMEDROID_ADGUARD.md` và `samloader.log` là dữ liệu có sẵn của người dùng; giữ nguyên, không xóa/commit nếu không được yêu cầu.
