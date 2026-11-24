@@ -10,7 +10,7 @@ Tài liệu này là bộ nhớ dùng chung cho tất cả AI Agents (Antigravit
   - Backend HTTP thuần Node.js (`server.mjs`), yêu cầu Node ≥20; Python runner dùng package Pyodide được bundle cùng repository.
   - Frontend SPA thuần (`index.html`, `styles.css`, `app.js`, `curriculum.mjs`).
   - Python runner chạy trong Web Worker; chỉ tải khi người học bấm Run.
-  - AI Tutor proxy (`/api/tutor`) gọi OpenAI-compatible local server qua `AI_BASE_URL`; khi laptop offline trả `503 tutor_offline`.
+  - AI Tutor proxy (`/api/tutor`) gọi OpenAI-compatible model tại `AI_BASE_URL`; khi upstream offline hoặc request timeout thì trả về `503 tutor_offline`, không ảnh hưởng việc học.
 - **Git Remote:** `https://github.com/DFuc1302/moc-homedroid.git` (nhánh `main`).
 
 ---
@@ -106,6 +106,9 @@ Không dùng quy trình copy bốn file source trực tiếp qua ADB để deplo
 - Kiểm tra gần nhất: `npm test` — 6/6 pass; `node --check app.js`, `curriculum.mjs`, `server.mjs` pass.
 - Live port `12080` đã trả JavaScript có assessment/buffer routes. Kiểm tra IP LAN hiện tại trước khi dùng, vì DHCP có thể đổi.
 - Local browser smoke trên server/data/key throwaway (2026-11-24): pairing; quiz bài 1 (80%) và lesson completion; assessment m01 (100%); gate + completion tuần 37; Pyodide output `7.5`, timeout vòng lặp vô hạn sau 15 giây, reset; progress sống qua reload và restart server; state export tải được, JSON hợp lệ. Đây không phải test trên deployment thật.
-- Tutor DataLab chưa nối HomeDroid (`AI_BASE_URL` trống; deployment env hiện chỉ có `HOST`, `PORT`, `DATA_DIR`, `PAIRING_KEY`). HomeDroid AI đã bật; llama.cpp chạy model `gemma-3-1b-it-Q4_K_M.gguf` (768.7 MB) trên CPU, context 2048, 4 threads; local API `http://<phone-ip>:8090/v1`. Kiểm thử câu tiếng Việt thành công; benchmark 0.3 words/s, nên kiểm tra câu trả lời dài với timeout tutor 20 giây. GPU không khả dụng, fallback cloud đang tắt. Nếu nối DataLab, `AI_BASE_URL` phải là `http://<phone-ip>:8090` (không thêm `/v1` vì server tự nối endpoint), `AI_MODEL=local/gemma-3-1b-it-q4_k_m`, `AI_API_KEY` lấy từ HomeDroid AI → Use from other apps; tuyệt đối không ghi key vào repo/log. Dashboard Deployments hiện không có nút sửa env của deployment đã tạo; smoke-test sau khi cập nhật cấu hình.
+- Tutor DataLab đã nối HomeDroid AI: `AI_BASE_URL=http://127.0.0.1:8090` (cùng điện thoại; `server.mjs` tự thêm `/v1/chat/completions`), `AI_MODEL=local/gemma-3-1b-it-q4_k_m`, `AI_API_KEY` lấy từ HomeDroid AI → Use from other apps; tuyệt đối không ghi key vào repo/log. Model `gemma-3-1b-it-Q4_K_M.gguf` (768.7 MB) chạy CPU, context 2048, 4 threads; GPU/fallback cloud tắt. HomeDroid API dùng từ laptop ở `http://<phone-ip>:8090/v1`, nhưng DataLab gọi loopback.
+- Cấu hình đã được ghi an toàn vào `deploys.json` bằng backup riêng tư + temp file cùng thư mục + atomic rename; `PAIRING_KEY` không đổi. Redeploy đơn lẻ không nạp lại env; cần stop/start HomeDroid server rồi kiểm tra process env bằng phép so sánh boolean, không in giá trị.
+- Key HomeDroid AI từng dán vào chat đã được rotate; client còn dùng key cũ cần cập nhật. Không ghi key mới vào memory.
+- Tutor `/api/tutor` trước đây timeout sau 20 giây (`AbortError`); `server.mjs` hiện cho phép 120 giây và chỉ log tên lỗi/mã socket, không log request hay credential. `npm test` 6/6 pass; health trả `tutor:true`; kiểm thử thực tế trên UI DataLab trả lời thành công: “int là kiểu dữ liệu số, str là kiểu dữ liệu chuỗi.” Model chậm; câu trả lời có thể chờ lâu.
 - Pairing secret nằm trong file Windows DPAPI `%USERPROFILE%\.datalab-pairing-key.dpapi`; không ghi secret/dashboard password vào repo hoặc memory. Dashboard password từng xuất hiện trong transcript công cụ; chủ dự án cần xoay password, agents không nhắc lại credential.
 - Hai file untracked `HANDOFF_ORCA_HOMEDROID_ADGUARD.md` và `samloader.log` là dữ liệu có sẵn của người dùng; giữ nguyên, không xóa/commit nếu không được yêu cầu.
